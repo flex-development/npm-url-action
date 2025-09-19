@@ -1,0 +1,16 @@
+cefc
+commitlintrc
+dedupe
+devlop
+fbca
+fldv
+ggshield
+gpgsign
+hmarr
+jchen
+kaisugi
+nvmrc
+pkgs
+sarif
+shfmt
+yarnrc

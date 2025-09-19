@@ -1,0 +1,76 @@
+{
+  "name": "@flex-development/npm-url-action",
+  "description": "Create a URL for the NPM registry",
+  "version": "0.0.0",
+  "keywords": [
+    "actions",
+    "deploy",
+    "deployment",
+    "environment",
+    "npm",
+    "url"
+  ],
+  "license": "BSD-3-Clause",
+  "homepage": "https://github.com/flex-development/npm-url-action",
+  "repository": "https://github.com/flex-development/npm-url-action.git",
+  "bugs": "https://github.com/flex-development/npm-url-action/issues",
+  "author": {
+    "name": "Lexus Drumgold",
+    "url": "https://github.com/unicornware"
+  },
+  "type": "module",
+  "files": [
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "README.md",
+    "action.yml"
+  ],
+  "remarkConfig": {
+    "plugins": [
+      "@flex-development/remark-preset"
+    ]
+  },
+  "scripts": {
+    "check:ci": "yarn dedupe --check && yarn check:format && yarn remark && yarn check:lint && yarn check:spelling",
+    "check:format": "dprint check --incremental=false",
+    "check:lint": "eslint --exit-on-fatal-error --max-warnings 0 .",
+    "check:spelling": "cspell lint --color --no-progress --relative $@ \"**\"",
+    "check:upgrades": "yarn upgrade-interactive",
+    "clean:modules": "trash ./.yarn/{cache,*.gz} ./node_modules",
+    "clean:pack": "trash \"./*.tgz\"",
+    "commitlint": "commitlint -V",
+    "fix:cg": "yarn fix:format && yarn fix:lint",
+    "fix:dedupe": "yarn dedupe --strategy=highest",
+    "fix:format": "dprint fmt",
+    "fix:lint": "yarn check:lint --cache --fix",
+    "postinstall": "[ -f ./node_modules/.bin/husky ] && chmod +x .husky/* && husky || exit 0",
+    "release": "bash ./scripts/release.sh",
+    "remark": "remark ."
+  },
+  "devDependencies": {
+    "@commitlint/cli": "19.8.1",
+    "@commitlint/types": "19.8.1",
+    "@flex-development/commitlint-config": "1.0.1",
+    "@flex-development/eslint-config": "1.1.1",
+    "@flex-development/grease": "3.0.0-alpha.9",
+    "@flex-development/remark-preset": "1.0.0",
+    "@tsconfig/strictest": "2.0.5",
+    "@types/unist": "3.0.3",
+    "cspell": "9.2.1",
+    "devlop": "1.1.0",
+    "dprint": "0.50.2",
+    "editorconfig": "3.0.1",
+    "eslint": "9.35.0",
+    "husky": "9.1.7",
+    "prettier": "3.6.2",
+    "remark": "15.0.1",
+    "remark-cli": "12.0.1",
+    "sh-syntax": "0.5.8",
+    "trash-cli": "6.0.0",
+    "ts-dedent": "2.2.0",
+    "typescript": "5.9.2",
+    "unified": "11.0.5",
+    "vfile": "6.0.3"
+  },
+  "packageManager": "yarn@4.9.4"
+}

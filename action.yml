@@ -1,0 +1,28 @@
+# ACTION METADATA
+# https://docs.github.com/actions/creating-actions/metadata-syntax-for-github-actions
+
+---
+name: npm-url
+author: '@flex-development'
+description: Create a URL for the NPM registry
+inputs:
+outputs:
+  url:
+    description: the public registry url
+    value: ${{ steps.url.outputs.result }}
+runs:
+  using: composite
+  steps:
+    - id: url
+      shell: bash
+      run: |
+        set -e
+
+        # create registry url.
+        URL=
+
+        # set action output.
+        echo "result=$(echo "$URL" | xargs)" >>$GITHUB_OUTPUT
+branding:
+  color: blue
+  icon: link

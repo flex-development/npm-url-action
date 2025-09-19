@@ -1,0 +1,217 @@
+# Continuous Integration
+#
+# References:
+#
+# - https://docs.github.com/actions/learn-github-actions/contexts
+# - https://docs.github.com/actions/learn-github-actions/expressions
+# - https://docs.github.com/actions/using-jobs/using-a-matrix-for-your-jobs
+# - https://docs.github.com/actions/using-workflows/events-that-trigger-workflows#pull_request
+# - https://docs.github.com/actions/using-workflows/events-that-trigger-workflows#push
+# - https://docs.github.com/actions/using-workflows/events-that-trigger-workflows#workflow_dispatch
+# - https://docs.github.com/actions/using-workflows/workflow-commands-for-github-actions
+# - https://docs.github.com/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request
+# - https://docs.github.com/webhooks-and-events/webhooks/webhook-events-and-payloads#push
+# - https://docs.github.com/webhooks-and-events/webhooks/webhook-events-and-payloads#workflow_dispatch
+# - https://github.com/GitGuardian/ggshield-action
+# - https://github.com/actions/cache
+# - https://github.com/actions/cache/discussions/650
+# - https://github.com/actions/checkout
+# - https://github.com/actions/setup-node
+# - https://github.com/actions/setup-node/blob/main/docs/advanced-usage.md#yarn2-configuration
+# - https://github.com/dprint/check
+# - https://github.com/flex-development/grease
+# - https://github.com/flex-development/manver-action
+# - https://github.com/hmarr/debug-action
+# - https://github.com/streetsidesoftware/cspell-action
+
+---
+name: ci
+on:
+  pull_request:
+  push:
+    branches:
+      - feat/**
+      - hotfix/**
+      - main
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  CACHE_PATH: node_modules
+  HUSKY: 0
+  REF: ${{ github.head_ref || github.ref }}
+  REF_NAME: ${{ github.head_ref || github.ref_name }}
+  SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+jobs:
+  preflight:
+    if: |
+      github.event_name == 'pull_request' ||
+      github.event.head_commit.committer.username != 'web-flow'
+    runs-on: ubuntu-latest
+    outputs:
+      cache-key: ${{ steps.cache-key.outputs.result }}
+      version: ${{ steps.version.outputs.build }}
+    steps:
+      - id: debug
+        name: Print environment variables and event payload
+        uses: hmarr/debug-action@v3.0.0
+      - id: checkout
+        name: Checkout ${{ env.REF_NAME }}
+        uses: actions/checkout@v5.0.0
+        with:
+          persist-credentials: false
+          ref: ${{ env.REF }}
+      - id: node
+        name: Setup Node.js
+        uses: actions/setup-node@v5.0.0
+        with:
+          cache: yarn
+          cache-dependency-path: yarn.lock
+          node-version-file: .nvmrc
+      - id: dependencies
+        name: Install dependencies
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: ${{ github.actor != 'dependabot[bot]' }}
+        run: yarn
+      - id: cache-key
+        name: Get cache key
+        run: echo "result=${{ hashFiles('yarn.lock') }}" >>$GITHUB_OUTPUT
+      - id: cache
+        name: Cache dependencies
+        uses: actions/cache@v4.2.4
+        with:
+          key: ${{ steps.cache-key.outputs.result }}
+          path: ${{ env.CACHE_PATH }}
+      - id: version
+        name: Extract version metadata
+        uses: flex-development/manver-action@1.0.1
+  gitguardian:
+    runs-on: ubuntu-latest
+    steps:
+      - id: checkout
+        name: Checkout
+        uses: actions/checkout@v5.0.0
+        with:
+          fetch-depth: 0
+      - id: scan
+        name: Scan commits with ggshield
+        uses: GitGuardian/ggshield-action@v1.43.0
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
+          GITHUB_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          GITHUB_PULL_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GITHUB_PUSH_BASE_SHA: ${{ github.event.base }}
+          GITHUB_PUSH_BEFORE_SHA: ${{ github.event.before }}
+        with:
+          args: --all-policies --format sarif --show-secrets --with-incident-details --verbose
+  commitlint:
+    needs: preflight
+    runs-on: ubuntu-latest
+    steps:
+      - id: checkout
+        name: Checkout ${{ env.REF_NAME }}
+        uses: actions/checkout@v5.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ env.REF }}
+      - id: node
+        name: Setup Node.js
+        uses: actions/setup-node@v5.0.0
+        with:
+          cache: yarn
+          cache-dependency-path: yarn.lock
+          node-version-file: .nvmrc
+      - id: cache
+        name: Restore dependencies cache
+        uses: actions/cache@v4.2.4
+        with:
+          key: ${{ needs.preflight.outputs.cache-key }}
+          path: ${{ env.CACHE_PATH }}
+      - id: lint
+        name: Check commitlint status
+        if: github.run_number != '1'
+        run: yarn commitlint --from $SHA~${{ github.event.pull_request.commits || 1 }} --to $SHA
+  format:
+    needs: preflight
+    runs-on: ubuntu-latest
+    steps:
+      - id: checkout
+        name: Checkout ${{ env.REF_NAME }}
+        uses: actions/checkout@v5.0.0
+        with:
+          persist-credentials: false
+          ref: ${{ env.REF }}
+      - id: node
+        name: Setup Node.js
+        uses: actions/setup-node@v5.0.0
+        with:
+          cache: yarn
+          cache-dependency-path: yarn.lock
+          node-version-file: .nvmrc
+      - id: cache
+        name: Restore dependencies cache
+        uses: actions/cache@v4.2.4
+        with:
+          key: ${{ needs.preflight.outputs.cache-key }}
+          path: ${{ env.CACHE_PATH }}
+      - id: version
+        name: Get dprint version
+        run: echo "result=$(jq .devDependencies.dprint package.json -r)" >>$GITHUB_OUTPUT
+      - id: check
+        name: Check formatting
+        uses: dprint/check@v2.3
+        with:
+          args: --config-discovery=false --incremental=false --log-level=info
+          config-path: .dprint.jsonc
+          dprint-version: ${{ steps.version.outputs.result }}
+  lint:
+    needs: preflight
+    runs-on: ubuntu-latest
+    steps:
+      - id: checkout
+        name: Checkout ${{ env.REF_NAME }}
+        uses: actions/checkout@v5.0.0
+        with:
+          persist-credentials: false
+          ref: ${{ env.REF }}
+      - id: node
+        name: Setup Node.js
+        uses: actions/setup-node@v5.0.0
+        with:
+          cache: yarn
+          cache-dependency-path: yarn.lock
+          node-version-file: .nvmrc
+      - id: cache
+        name: Restore dependencies cache
+        uses: actions/cache@v4.2.4
+        with:
+          key: ${{ needs.preflight.outputs.cache-key }}
+          path: ${{ env.CACHE_PATH }}
+      - id: remark
+        name: Check markdown files
+        run: yarn remark
+      - id: lint
+        name: Check eslint files
+        run: yarn check:lint
+  spelling:
+    runs-on: ubuntu-latest
+    steps:
+      - id: checkout
+        name: Checkout ${{ env.REF_NAME }}
+        uses: actions/checkout@v5.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ env.REF }}
+      - id: spelling
+        name: Check spelling
+        uses: streetsidesoftware/cspell-action@v7.2.0
+        with:
+          config: .cspell.json
+          inline: error
+          treat_flagged_words_as_errors: true
+          verbose: true
