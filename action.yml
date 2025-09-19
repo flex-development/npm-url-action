@@ -6,6 +6,16 @@ name: npm-url
 author: '@flex-development'
 description: Create a URL for the NPM registry
 inputs:
+  pkg:
+    default: ${{ github.event.repository.name }}
+    description: package name
+    required: false
+  scope:
+    description: package scope
+    required: false
+  version:
+    description: package version
+    required: false
 outputs:
   url:
     description: the public registry url
@@ -18,8 +28,17 @@ runs:
       run: |
         set -e
 
-        # create registry url.
-        URL=
+        # init registry url.
+        URL=https://npmjs.com/package
+
+        # add package name to scope.
+        [[ -n '${{ inputs.scope }}' ]] && URL=$URL/@${{ inputs.scope }}
+
+        # add package name to url.
+        URL=$URL/${{ inputs.pkg }}
+
+        # add package version to url.
+        [[ -n '${{ inputs.version }}' ]] && URL=$URL/v/${{ inputs.version }}
 
         # set action output.
         echo "result=$(echo "$URL" | xargs)" >>$GITHUB_OUTPUT

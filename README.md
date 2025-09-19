@@ -93,15 +93,15 @@ jobs:
 
 > **default**: `${{ github.event.repository.name }}`
 
-The name of the package.
+The name of the package (optional).
 
 ### `scope`
 
-The scope of the [package](#pkg).
+The scope of the [package](#pkg) (optional).
 
 ### `version`
 
-The version of the [package](#pkg) to include in the URL.
+The version of the [package](#pkg) to include in the URL (optional).
 
 ## Outputs
 

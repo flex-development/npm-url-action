@@ -37,9 +37,38 @@ jobs:
           persist-credentials: false
           ref: ${{ github.head_ref || github.ref }}
       - id: test1
-        name: Test defaults
+        name: Test 1
         uses: ./
+      - id: test2
+        name: Test 2
+        uses: ./
+        with:
+          pkg: vfile
+      - id: test3
+        name: Test 3
+        uses: ./
+        with:
+          pkg: devlop
+          version: 1.1.0
+      - id: test4
+        name: Test 4
+        uses: ./
+        with:
+          pkg: colors
+          scope: ${{ github.repository_owner }}
+      - id: test5
+        name: Test 5
+        uses: ./
+        with:
+          pkg: grease
+          scope: ${{ github.repository_owner }}
+          version: 3.0.0-alpha.9
       - id: outputs
         name: Outputs
         run: |
+          echo outputs
           echo steps.test1.outputs.url: ${{ steps.test1.outputs.url }}
+          echo steps.test2.outputs.url: ${{ steps.test2.outputs.url }}
+          echo steps.test3.outputs.url: ${{ steps.test3.outputs.url }}
+          echo steps.test4.outputs.url: ${{ steps.test4.outputs.url }}
+          echo steps.test5.outputs.url: ${{ steps.test5.outputs.url }}
