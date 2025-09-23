@@ -54,7 +54,7 @@
     "@flex-development/eslint-config": "1.1.1",
     "@flex-development/grease": "3.0.0-alpha.9",
     "@flex-development/remark-preset": "1.0.0",
-    "@tsconfig/strictest": "2.0.5",
+    "@tsconfig/strictest": "2.0.6",
     "@types/unist": "3.0.3",
     "cspell": "9.2.1",
     "devlop": "1.1.0",
