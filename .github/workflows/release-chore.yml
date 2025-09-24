@@ -18,6 +18,7 @@
 # - https://github.com/actions/setup-node/blob/main/docs/advanced-usage.md#yarn2-configuration
 # - https://github.com/flex-development/gh-commit
 # - https://github.com/flex-development/grease
+# - https://github.com/flex-development/jq-action
 # - https://github.com/hmarr/debug-action
 # - https://github.com/kaisugi/action-regex-match
 # - https://regex101.com/r/OwpOr2
@@ -87,10 +88,16 @@ jobs:
           Message must match [`${{ vars.RELEASE_CHORE_REGEX }}`](https://regex101.com/r/OwpOr2)'
           echo "$ERR" >>$GITHUB_STEP_SUMMARY
           exit 1
+      - id: tag-prefix
+        name: Get release tag prefix
+        uses: flex-development/jq-action@1.0.0
+        with:
+          data: grease.config.json
+          filter: .tagprefix
       - id: tag
         name: Get release tag
         run: |
-          echo "result=$(jq .tagprefix grease.config.json -r)${{ steps.version.outputs.match }}" >>$GITHUB_OUTPUT
+          echo "result=${{ steps.tag-prefix.outputs.result }}${{ steps.version.outputs.match }}" >>$GITHUB_OUTPUT
       - id: message
         name: Get release message
         run: 'echo "result=release: ${{ steps.tag.outputs.result }}" >>$GITHUB_OUTPUT'

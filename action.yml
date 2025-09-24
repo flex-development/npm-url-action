@@ -31,7 +31,7 @@ runs:
         # init registry url.
         URL=https://npmjs.com/package
 
-        # add package name to scope.
+        # add package scope to url.
         [[ -n '${{ inputs.scope }}' ]] && URL=$URL/@${{ inputs.scope }}
 
         # add package name to url.

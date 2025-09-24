@@ -19,6 +19,7 @@
 # - https://github.com/crazy-max/ghaction-import-gpg
 # - https://github.com/flex-development/dist-tag-action
 # - https://github.com/flex-development/grease
+# - https://github.com/flex-development/jq-action
 # - https://github.com/flex-development/manver-action
 # - https://github.com/hmarr/debug-action
 # - https://yarnpkg.com/cli/pack
@@ -68,7 +69,10 @@ jobs:
         uses: flex-development/manver-action@1.0.1
       - id: tag-prefix
         name: Get release tag prefix
-        run: echo "result=$(jq .tagprefix grease.config.json -r)" >>$GITHUB_OUTPUT
+        uses: flex-development/jq-action@1.0.0
+        with:
+          data: grease.config.json
+          filter: .tagprefix
       - id: tag
         name: Get release tag
         run: |

@@ -20,6 +20,7 @@
 # - https://github.com/actions/setup-node/blob/main/docs/advanced-usage.md#yarn2-configuration
 # - https://github.com/dprint/check
 # - https://github.com/flex-development/grease
+# - https://github.com/flex-development/jq-action
 # - https://github.com/flex-development/manver-action
 # - https://github.com/hmarr/debug-action
 # - https://github.com/streetsidesoftware/cspell-action
@@ -160,7 +161,10 @@ jobs:
           path: ${{ env.CACHE_PATH }}
       - id: version
         name: Get dprint version
-        run: echo "result=$(jq .devDependencies.dprint package.json -r)" >>$GITHUB_OUTPUT
+        uses: flex-development/jq-action@1.0.0
+        with:
+          data: package.json
+          filter: .devDependencies.dprint
       - id: check
         name: Check formatting
         uses: dprint/check@v2.3
