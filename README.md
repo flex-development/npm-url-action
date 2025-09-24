@@ -19,6 +19,7 @@ Create a URL for the NPM registry
   - [`version`](#version)
 - [Outputs](#outputs)
   - [`url`](#url)
+- [Related](#related)
 - [Contribute](#contribute)
 
 ## What is this?
@@ -109,9 +110,15 @@ The version of the [package](#pkg) to include in the URL (optional).
 
 The public registry URL.
 
+## Related
+
+- [`flex-development/ghr-url-action`][ghr-url-action] — create a url for a github registry
+
 ## Contribute
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 This project has a [code of conduct](./CODE_OF_CONDUCT.md). By interacting with this repository, organization, or
 community you agree to abide by its terms.
+
+[ghr-url-action]: https://github.com/flex-development/ghr-url-action
