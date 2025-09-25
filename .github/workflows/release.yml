@@ -1,6 +1,6 @@
 # Release
 #
-# Publish a GitHub release on release branch merge or workflow dispatch.
+# Publish a GitHub release on release branch merge.
 #
 # References:
 #
@@ -9,11 +9,9 @@
 # - https://docs.github.com/actions/learn-github-actions/expressions
 # - https://docs.github.com/actions/reference/workflows-and-actions/workflow-commands
 # - https://docs.github.com/actions/using-workflows/events-that-trigger-workflows#pull_request
-# - https://docs.github.com/actions/using-workflows/events-that-trigger-workflows#workflow_dispatch
 # - https://docs.github.com/actions/using-workflows/using-github-cli-in-workflows
 # - https://docs.github.com/actions/using-workflows/workflow-commands-for-github-actions
 # - https://docs.github.com/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request
-# - https://docs.github.com/webhooks-and-events/webhooks/webhook-events-and-payloads#workflow_dispatch
 # - https://git-scm.com/book/en/v2/Git-Basics-Tagging
 # - https://github.com/actions/checkout
 # - https://github.com/crazy-max/ghaction-import-gpg
@@ -33,21 +31,11 @@ on:
       - main
     types:
       - closed
-  workflow_dispatch:
-    inputs:
-      sha:
-        description: release commit sha
-        required: true
-        type: string
 env:
-  REF: ${{ inputs.sha || github.event.pull_request.merge_commit_sha }}
-  REF_NAME: |
-    ${{ format('{0}@{1}', github.base_ref, inputs.sha || github.event.pull_request.merge_commit_sha) }}
+  ref_name: ${{ format('{0}@{1}', github.base_ref, github.event.pull_request.merge_commit_sha) }}
 jobs:
   preflight:
-    if: |
-      (github.event.pull_request.merged && startsWith(github.head_ref, 'release/')) ||
-      (github.event_name == 'workflow_dispatch' && github.ref_name == 'main')
+    if: ${{ startsWith(github.head_ref, 'release/') && github.event.pull_request.merged }}
     permissions:
       contents: read
     runs-on: ubuntu-latest
@@ -61,10 +49,10 @@ jobs:
         name: Print environment variables and event payload
         uses: hmarr/debug-action@v3.0.0
       - id: checkout
-        name: Checkout ${{ env.REF_NAME }}
+        name: Checkout ${{ env.ref_name }}
         uses: actions/checkout@v5.0.0
         with:
-          ref: ${{ env.REF }}
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
       - id: tag-prefix
         name: Get release tag prefix
         uses: flex-development/jq-action@1.0.0
@@ -98,12 +86,12 @@ jobs:
       NOTES_FILE: RELEASE_NOTES.md
     steps:
       - id: checkout
-        name: Checkout ${{ env.REF_NAME }}
+        name: Checkout ${{ env.ref_name }}
         uses: actions/checkout@v5.0.0
         with:
           fetch-depth: 0
           persist-credentials: true
-          ref: ${{ env.REF }}
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
           token: ${{ env.GITHUB_TOKEN }}
       - id: gpg-import
         name: Import GPG key
