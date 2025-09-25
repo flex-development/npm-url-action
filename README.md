@@ -112,6 +112,7 @@ The public registry URL.
 
 ## Related
 
+- [`flex-development/gh-release-url-action`][gh-release-url-action] — create a url for a github release
 - [`flex-development/ghr-url-action`][ghr-url-action] — create a url for a github registry
 
 ## Contribute
@@ -120,5 +121,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 This project has a [code of conduct](./CODE_OF_CONDUCT.md). By interacting with this repository, organization, or
 community you agree to abide by its terms.
+
+[gh-release-url-action]: https://github.com/flex-development/gh-release-url-action
 
 [ghr-url-action]: https://github.com/flex-development/ghr-url-action
