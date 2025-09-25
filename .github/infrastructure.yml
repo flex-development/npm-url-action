@@ -22,6 +22,7 @@ branches:
       required_status_checks:
         checks:
           - context: add-to-project
+          - context: artifacts
           - context: auto-merge
           - context: auto-review
           - context: commitlint

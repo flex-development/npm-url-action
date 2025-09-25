@@ -17,6 +17,7 @@
 # - https://github.com/actions/checkout
 # - https://github.com/actions/setup-node
 # - https://github.com/actions/setup-node/blob/main/docs/advanced-usage.md#yarn2-configuration
+# - https://github.com/actions/upload-artifact
 # - https://github.com/dprint/check
 # - https://github.com/flex-development/grease
 # - https://github.com/flex-development/jq-action
@@ -199,3 +200,53 @@ jobs:
           inline: error
           treat_flagged_words_as_errors: true
           verbose: true
+  artifacts:
+    needs:
+      - commitlint
+      - format
+      - lint
+      - preflight
+      - spelling
+    runs-on: ubuntu-latest
+    steps:
+      - id: tarball
+        name: Get tarball path
+        run: |
+          echo "result=${{ format('@{0}-{1}-{2}.tgz', github.repository_owner, github.event.repository.name, needs.preflight.outputs.version) }}" >>$GITHUB_OUTPUT
+      - id: checkout
+        name: Checkout ${{ env.REF_NAME }}
+        uses: actions/checkout@v5.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ env.REF }}
+      - id: node
+        name: Setup Node.js
+        uses: actions/setup-node@v5.0.0
+        with:
+          cache: yarn
+          cache-dependency-path: yarn.lock
+          node-version-file: .nvmrc
+      - id: cache
+        name: Restore dependencies cache
+        uses: actions/cache@v4.2.4
+        with:
+          key: ${{ needs.preflight.outputs.cache-key }}
+          path: ${{ env.CACHE_PATH }}
+      - id: local-binaries
+        name: Add local binaries to $PATH
+        run: echo "$GITHUB_WORKSPACE/$CACHE_PATH/.bin" >> $GITHUB_PATH
+      - id: changelog
+        name: Changelog preview
+        env:
+          TZ: ${{ vars.TZ }}
+        run: echo "$(grease changelog)" >>$GITHUB_STEP_SUMMARY
+      - id: pack
+        name: Pack project
+        run: yarn pack -o ${{ steps.tarball.outputs.result }}
+      - id: archive
+        name: Archive production artifact
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: ${{ steps.tarball.outputs.result }}
+          path: ${{ steps.tarball.outputs.result }}
