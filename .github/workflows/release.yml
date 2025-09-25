@@ -18,6 +18,7 @@
 # - https://github.com/actions/checkout
 # - https://github.com/crazy-max/ghaction-import-gpg
 # - https://github.com/flex-development/dist-tag-action
+# - https://github.com/flex-development/gh-release-url-action
 # - https://github.com/flex-development/grease
 # - https://github.com/flex-development/jq-action
 # - https://github.com/flex-development/manver-action
@@ -51,10 +52,10 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     outputs:
-      prerelease: ${{ steps.dist-tag.outputs.prerelease }}
-      tag: ${{ steps.tag.outputs.result }}
+      prerelease: ${{ steps.dist.outputs.prerelease }}
+      tag: ${{ steps.version.outputs.tag }}
       version: ${{ steps.version.outputs.manifest }}
-      url: ${{ steps.url.outputs.result }}
+      url: ${{ steps.environment.outputs.url }}
     steps:
       - id: debug
         name: Print environment variables and event payload
@@ -64,24 +65,23 @@ jobs:
         uses: actions/checkout@v5.0.0
         with:
           ref: ${{ env.REF }}
-      - id: version
-        name: Get release version
-        uses: flex-development/manver-action@1.0.1
       - id: tag-prefix
         name: Get release tag prefix
         uses: flex-development/jq-action@1.0.0
         with:
           data: grease.config.json
           filter: .tagprefix
-      - id: tag
-        name: Get release tag
-        run: |
-          echo "result=${{ format('{0}{1}', steps.tag-prefix.outputs.result, steps.version.outputs.manifest) }}" >>$GITHUB_OUTPUT
-      - id: url
+      - id: version
+        name: Get release version
+        uses: flex-development/manver-action@1.1.0
+        with:
+          tag-prefix: ${{ steps.tag-prefix.outputs.result }}
+      - id: environment
         name: Get release url
-        run: |
-          echo "result=$(echo "${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ steps.tag.outputs.result }}" | xargs)" >>$GITHUB_OUTPUT
-      - id: dist-tag
+        uses: flex-development/gh-release-url-action@2.0.1
+        with:
+          version: ${{ steps.version.outputs.tag }}
+      - id: dist
         name: Get dist tag
         uses: flex-development/dist-tag-action@1.1.2
         with:
@@ -139,8 +139,5 @@ jobs:
         run: 'grease tag -ps -m "release: {tag}" ${{ needs.preflight.outputs.version }}'
       - id: publish
         name: Publish release
-        env:
-          PRERELEASE: ${{ needs.preflight.outputs.prerelease }}
-          TAG: ${{ needs.preflight.outputs.tag }}
         run: |
-          gh release create $TAG *.tgz --title=$TAG --notes-file=$NOTES_FILE --verify-tag --prerelease=$PRERELEASE --discussion-category=releases
+          gh release create ${{ needs.preflight.outputs.tag }} *.tgz --title=${{ needs.preflight.outputs.tag }} --notes-file=$NOTES_FILE --verify-tag --prerelease=${{ needs.preflight.outputs.prerelease }} --discussion-category=releases
