@@ -88,7 +88,7 @@ jobs:
           path: ${{ env.CACHE_PATH }}
       - id: version
         name: Extract version metadata
-        uses: flex-development/manver-action@1.0.1
+        uses: flex-development/manver-action@1.1.0
   commitlint:
     needs: preflight
     runs-on: ubuntu-latest
