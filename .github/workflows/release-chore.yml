@@ -97,7 +97,7 @@ jobs:
           filter: .tagprefix
       - id: environment
         name: Get release tag
-        uses: flex-development/gh-release-url-action@2.0.1
+        uses: flex-development/gh-release-url-action@2.1.0
         with:
           tag-prefix: ${{ steps.tag-prefix.outputs.result }}
           version: ${{ steps.version.outputs.match }}
