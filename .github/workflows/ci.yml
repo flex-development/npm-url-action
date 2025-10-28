@@ -194,7 +194,7 @@ jobs:
           ref: ${{ env.REF }}
       - id: spelling
         name: Check spelling
-        uses: streetsidesoftware/cspell-action@v7.2.0
+        uses: streetsidesoftware/cspell-action@v7.2.1
         with:
           config: .cspell.json
           inline: error
