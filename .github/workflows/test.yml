@@ -32,7 +32,7 @@ jobs:
         uses: hmarr/debug-action@v3.0.0
       - id: checkout
         name: Checkout ${{ github.head_ref || github.ref_name }}
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v5.0.1
         with:
           persist-credentials: false
           ref: ${{ github.head_ref || github.ref }}
